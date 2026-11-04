@@ -1,0 +1,313 @@
+{
+  "settings": {
+    "defaultModel": "gemini-3.1-flash-lite",
+    "temperature": 0.7,
+    "responseStyle": "balanced",
+    "defaultLanguage": "English",
+    "voiceGender": "female",
+    "voiceSpeed": 1,
+    "theme": "dark",
+    "enableMemory": true,
+    "enableGrounding": true,
+    "customSystemPrompt": "You are Honore Assistant, an advanced, highly capable personal AI assistant, programming partner, research analyst, and productivity agent.",
+    "brainMode": "auto",
+    "ollamaBaseUrl": "http://127.0.0.1:11434",
+    "ollamaModel": "llama3.2",
+    "autoOfflineFallback": true
+  },
+  "conversations": [
+    {
+      "id": "conv-1793778713644",
+      "title": "Introduce yourself briefly as Honore...",
+      "model": "gemini-3.1-flash-lite",
+      "category": "general",
+      "pinned": false,
+      "createdAt": "2026-11-04T07:51:53.644Z",
+      "updatedAt": "2026-11-04T11:58:18.396Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1793778713644-u",
+      "conversationId": "conv-1793778713644",
+      "role": "user",
+      "content": "Introduce yourself briefly as Honore Assistant.",
+      "attachments": [],
+      "createdAt": "2026-11-04T07:51:53.644Z"
+    },
+    {
+      "id": "msg-1793778713645-a",
+      "conversationId": "conv-1793778713644",
+      "role": "assistant",
+      "content": "I am **Honore Assistant**, your elite personal digital assistant and senior software engineer, dedicated to architecting high-performance solutions and streamlining complex workflows for the **All-in-One Personal AI Assistant**. \n\nMy core objective is to deliver precise, production-ready code, architectural clarity, and actionable technical guidance using modern stacks like **TypeScript**, **Tailwind CSS**, and **modular system design**. Whether we are optimizing memory management, refining UI/UX, or scaling your automation engine, I provide direct, expert-level execution to ensure your projects operate at peak efficiency.",
+      "createdAt": "2026-11-04T07:51:54.755Z"
+    },
+    {
+      "id": "msg-1793793498396-u",
+      "conversationId": "conv-1793778713644",
+      "role": "user",
+      "content": "Explain how this SQL (Relational Database) code works step by step with clear technical explanations:\n```sql\ncreate database mount;\ncreate table king(mount int(50) primary key);\n```",
+      "attachments": [],
+      "createdAt": "2026-11-04T11:58:18.396Z"
+    }
+  ],
+  "memories": [
+    {
+      "id": "mem-1",
+      "category": "preference",
+      "key": "Developer Persona",
+      "content": "User prefers clean TypeScript, Tailwind CSS, modular architecture, and modern best practices.",
+      "confidence": 0.98,
+      "active": true,
+      "createdAt": "2026-11-04T05:54:55.361Z",
+      "updatedAt": "2026-11-04T05:54:55.363Z"
+    },
+    {
+      "id": "mem-2",
+      "category": "instruction",
+      "key": "Code Style",
+      "content": "Always provide complete, executable code blocks with explanatory comments rather than pseudo-code snippets.",
+      "confidence": 0.95,
+      "active": true,
+      "createdAt": "2026-11-04T05:54:55.363Z",
+      "updatedAt": "2026-11-04T05:54:55.363Z"
+    },
+    {
+      "id": "mem-3",
+      "category": "project",
+      "key": "Aether Assistant Core",
+      "content": "Currently working on the All-in-One Personal AI Assistant with real web search, memory vault, code sandbox, and automation engine.",
+      "confidence": 0.99,
+      "active": true,
+      "createdAt": "2026-11-04T05:54:55.363Z",
+      "updatedAt": "2026-11-04T05:54:55.363Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Review System Architecture and Multi-Tool Pipeline",
+      "description": "Ensure web search grounding, code runner, and memory injection are fully coordinated.",
+      "status": "in_progress",
+      "priority": "high",
+      "category": "Engineering",
+      "createdAt": "2026-11-04T05:54:55.363Z"
+    },
+    {
+      "id": "task-2",
+      "title": "Build Executive Research Brief on Next-Gen Autonomous Agents",
+      "description": "Gather recent benchmarks, tools comparison, and synthesize into a downloadable study report.",
+      "status": "todo",
+      "priority": "medium",
+      "category": "Research",
+      "createdAt": "2026-11-04T05:54:55.363Z"
+    },
+    {
+      "id": "task-3",
+      "title": "Configure Daily Task Summary Workflow",
+      "description": "Automate morning briefing generation with top priorities and open project milestones.",
+      "status": "done",
+      "priority": "low",
+      "category": "Productivity",
+      "createdAt": "2026-11-04T05:54:55.363Z"
+    }
+  ],
+  "automations": [
+    {
+      "id": "auto-1",
+      "name": "Deep Research & Executive Briefing",
+      "description": "Automated 4-step pipeline: search web sources, analyze findings, structure comparison matrix, and create downloadable report.",
+      "trigger": "manual",
+      "status": "idle",
+      "steps": [
+        {
+          "id": "s1",
+          "action": "web_search",
+          "description": "Query trusted search sources for domain updates",
+          "status": "pending"
+        },
+        {
+          "id": "s2",
+          "action": "analyze_data",
+          "description": "Filter, rank, and extract high-confidence claims",
+          "status": "pending"
+        },
+        {
+          "id": "s3",
+          "action": "synthesize",
+          "description": "Synthesize findings with structured takeaways",
+          "status": "pending"
+        },
+        {
+          "id": "s4",
+          "action": "export_document",
+          "description": "Generate formatted research report file",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "auto-2",
+      "name": "Code Review & Security Audit",
+      "description": "Analyzes provided code repository or snippet, identifies anti-patterns, checks edge cases, and suggests optimized refactors.",
+      "trigger": "manual",
+      "status": "idle",
+      "steps": [
+        {
+          "id": "c1",
+          "action": "parse_ast",
+          "description": "Inspect code syntax and structure",
+          "status": "pending"
+        },
+        {
+          "id": "c2",
+          "action": "security_check",
+          "description": "Scan for injection, leaks, and unhandled exceptions",
+          "status": "pending"
+        },
+        {
+          "id": "c3",
+          "action": "test_generation",
+          "description": "Generate unit test cases",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "auto-3",
+      "name": "Daily Productivity Briefing",
+      "description": "Reads active task board, prioritizes urgent items, creates daily focus agenda, and updates memory ledger.",
+      "trigger": "daily",
+      "status": "idle",
+      "steps": [
+        {
+          "id": "d1",
+          "action": "scan_tasks",
+          "description": "Audit pending tasks and deadlines",
+          "status": "pending"
+        },
+        {
+          "id": "d2",
+          "action": "rank_priorities",
+          "description": "Generate optimal time-blocked schedule",
+          "status": "pending"
+        },
+        {
+          "id": "d3",
+          "action": "commit_agenda",
+          "description": "Save schedule to active memory notes",
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-1",
+      "name": "Aether_Architecture_Overview.md",
+      "type": "markdown",
+      "size": 2450,
+      "content": "# Aether AI: Architecture & Capabilities\nAether is an advanced personal AI assistant engineered for high autonomy and versatility.\n\n## Core Subsystems\n1. Multi-Provider Cognitive Engine (Google Gemini 3.8 Flash, local Ollama, Claude, OpenAI)\n2. Grounded Web Intelligence with Google Search\n3. Client/Server Code Execution Sandbox\n4. Persistent Memory Vault with Semantic Context Injection\n5. Document Creator (Markdown, CSV, JSON, HTML, PDF reports)\n6. Interactive Relational SQL Query Runner\n7. Automation Workflow Pipeline",
+      "summary": "Architectural overview of Aether AI subsystems, including cognitive engine, memory vault, and tools.",
+      "createdAt": "2026-11-04T05:54:55.364Z"
+    }
+  ],
+  "sqlTables": {
+    "projects": {
+      "columns": [
+        "id",
+        "name",
+        "status",
+        "budget",
+        "lead_dev",
+        "deadline"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "name": "Aether AI Assistant",
+          "status": "Active",
+          "budget": 15000,
+          "lead_dev": "Alex Rivera",
+          "deadline": "2026-12-01"
+        },
+        {
+          "id": 2,
+          "name": "Autonomous Drone Navigator",
+          "status": "Planning",
+          "budget": 32000,
+          "lead_dev": "Elena Rostova",
+          "deadline": "2027-03-15"
+        },
+        {
+          "id": 3,
+          "name": "Quantum Cryptography Suite",
+          "status": "Active",
+          "budget": 50000,
+          "lead_dev": "Marcus Vance",
+          "deadline": "2027-01-30"
+        },
+        {
+          "id": 4,
+          "name": "Biometric Health Hub",
+          "status": "Completed",
+          "budget": 18500,
+          "lead_dev": "Sophia Chen",
+          "deadline": "2026-10-15"
+        }
+      ]
+    },
+    "team_members": {
+      "columns": [
+        "id",
+        "name",
+        "role",
+        "specialty",
+        "experience_yrs",
+        "assigned_project_id"
+      ],
+      "rows": [
+        {
+          "id": 1,
+          "name": "Alex Rivera",
+          "role": "Staff Engineer",
+          "specialty": "Full-Stack & GenAI",
+          "experience_yrs": 8,
+          "assigned_project_id": 1
+        },
+        {
+          "id": 2,
+          "name": "Elena Rostova",
+          "role": "Robotics Lead",
+          "specialty": "Computer Vision",
+          "experience_yrs": 6,
+          "assigned_project_id": 2
+        },
+        {
+          "id": 3,
+          "name": "Marcus Vance",
+          "role": "Security Architect",
+          "specialty": "Post-Quantum Crypto",
+          "experience_yrs": 11,
+          "assigned_project_id": 3
+        },
+        {
+          "id": 4,
+          "name": "Sophia Chen",
+          "role": "Data Scientist",
+          "specialty": "Predictive Biometrics",
+          "experience_yrs": 5,
+          "assigned_project_id": 4
+        },
+        {
+          "id": 5,
+          "name": "David Kim",
+          "role": "Systems Engineer",
+          "specialty": "Distributed Cloud",
+          "experience_yrs": 7,
+          "assigned_project_id": 1
+        }
+      ]
+    }
+  }
+}

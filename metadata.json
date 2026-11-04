@@ -1,0 +1,6 @@
+{
+  "name": "Aether AI - All-in-One Personal AI Assistant",
+  "description": "An advanced, intelligent personal AI companion for programming, deep research, document creation, automated workflows, voice conversations, and memory management.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
