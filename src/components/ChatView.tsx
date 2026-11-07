@@ -320,8 +320,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 onChange={e => onSelectModel?.(e.target.value)}
                 className="px-2 py-1 text-xs font-mono rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
               >
-                <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended)</option>
-                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Ultra-Fast)</option>
+                <option value="gemini-3.8-flash">gemini-3.8-flash (General Tasks & Coding)</option>
+                <option value="gemini-4-argon">gemini-4-argon (Complex Tasks & Deep Reasoning)</option>
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Fast & Lightweight)</option>
               </select>
               <span aria-hidden="true" className="text-slate-400">·</span>
               <span className="text-slate-500 dark:text-slate-400">Memory Synchronized</span>

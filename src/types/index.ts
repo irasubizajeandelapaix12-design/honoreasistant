@@ -124,6 +124,7 @@ export interface SystemStats {
 
 export type WorkspaceTab =
   | 'chat'
+  | 'maps'
   | 'game'
   | 'media'
   | 'science'

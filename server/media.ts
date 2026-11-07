@@ -1,10 +1,15 @@
 import { GoogleGenAI, Modality } from '@google/genai';
+import { isValidGeminiApiKey } from './ai.js';
 
 let aiClient: GoogleGenAI | null = null;
 function getAiClient(): GoogleGenAI {
+  const key = process.env.GEMINI_API_KEY;
+  if (!isValidGeminiApiKey(key)) {
+    throw new Error('Media creation requires a valid Gemini API key.');
+  }
   if (!aiClient) {
     aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: key,
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -184,7 +189,7 @@ export async function generateVideoOmni(params: {
 
   const interaction = await ai.interactions.create(
     {
-      model: 'gemini-omni-1.1-flash',
+      model: 'gemini-omni-1.2-flash',
       input,
       background: false,
       store: false,

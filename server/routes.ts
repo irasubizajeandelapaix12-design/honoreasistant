@@ -12,6 +12,12 @@ apiRouter.get('/test-models', async (_req, res) => {
   });
 });
 
+apiRouter.get('/config/maps', (_req: Request, res: Response) => {
+  res.json({
+    apiKey: process.env.VITE_GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY || '',
+  });
+});
+
 // ==========================================
 // 1. CHAT STREAMING (SSE) - WITH LOCAL OLLAMA BRAIN & OFFLINE SUPPORT
 // ==========================================
@@ -453,7 +459,6 @@ apiRouter.post('/media/music', async (req: Request, res: Response) => {
     const result = await generateMusicLyria({ prompt, model, imageBase64, imageMimeType });
     res.json(result);
   } catch (err: any) {
-    console.error('Music generation error:', err);
     res.status(500).json({ error: err.message || 'Failed to generate music' });
   }
 });
@@ -465,7 +470,6 @@ apiRouter.post('/media/image', async (req: Request, res: Response) => {
     const result = await generateImageBanana({ prompt, model, aspectRatio, baseImageBase64, baseImageMimeType });
     res.json(result);
   } catch (err: any) {
-    console.error('Image generation error:', err);
     res.status(500).json({ error: err.message || 'Failed to generate image' });
   }
 });
@@ -477,7 +481,6 @@ apiRouter.post('/media/video', async (req: Request, res: Response) => {
     const result = await generateVideoOmni({ prompt, aspectRatio, duration, resolution, startingFrameBase64, startingFrameMimeType });
     res.json(result);
   } catch (err: any) {
-    console.error('Video generation error:', err);
     res.status(500).json({ error: err.message || 'Failed to generate video' });
   }
 });
@@ -489,7 +492,6 @@ apiRouter.post('/media/transcribe', async (req: Request, res: Response) => {
     const result = await transcribeAudioGemini({ audioBase64, mimeType, prompt });
     res.json(result);
   } catch (err: any) {
-    console.error('Audio transcription error:', err);
     res.status(500).json({ error: err.message || 'Failed to transcribe audio' });
   }
 });

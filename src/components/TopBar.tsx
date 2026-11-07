@@ -15,6 +15,8 @@ import {
   Crosshair,
   Dna,
   Sparkles,
+  MapPin,
+  Search,
 } from 'lucide-react';
 import { WorkspaceTab } from '../types/index.js';
 
@@ -23,6 +25,7 @@ interface TopBarProps {
   onSelectTab: (tab: WorkspaceTab) => void;
   onOpenVoice: () => void;
   onOpenSettings: () => void;
+  onOpenCommandPalette: () => void;
   isDark: boolean;
   onToggleTheme: () => void;
   selectedModel: string;
@@ -33,12 +36,14 @@ export const TopBar: React.FC<TopBarProps> = ({
   onSelectTab,
   onOpenVoice,
   onOpenSettings,
+  onOpenCommandPalette,
   isDark,
   onToggleTheme,
   selectedModel,
 }) => {
   const navItems: Array<{ id: WorkspaceTab; label: string; icon: React.ElementType }> = [
     { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'maps', label: 'Maps', icon: MapPin },
     { id: 'game', label: '3D Game', icon: Crosshair },
     { id: 'media', label: 'Media Studio', icon: Sparkles },
     { id: 'science', label: 'Bioscience', icon: Dna },
@@ -77,16 +82,18 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Zone 2: Single-line navigation links */}
+      {/* Zone 2: Single-line navigation links with shortcut hints */}
       <nav className="hidden lg:flex items-center gap-1 overflow-x-auto py-1 scrollbar-none">
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = currentTab === item.id;
+          const shortcutNum = index < 9 ? index + 1 : null;
           return (
             <button
               key={item.id}
               onClick={() => onSelectTab(item.id)}
-              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
+              title={shortcutNum ? `${item.label} (⌘${shortcutNum} or Ctrl+${shortcutNum})` : item.label}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors group ${
                 isActive
                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
@@ -94,6 +101,17 @@ export const TopBar: React.FC<TopBarProps> = ({
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
+              {shortcutNum && (
+                <span
+                  className={`text-[9px] font-mono font-medium px-1 py-0.2 rounded transition-opacity ${
+                    isActive
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60'
+                      : 'text-slate-400 dark:text-slate-500 opacity-60 group-hover:opacity-100'
+                  }`}
+                >
+                  {shortcutNum}
+                </span>
+              )}
             </button>
           );
         })}
@@ -101,7 +119,18 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Zone 3: Primary action & controls */}
       <div className="flex items-center gap-2 shrink-0">
-
+        {/* Command Palette Trigger */}
+        <button
+          onClick={onOpenCommandPalette}
+          className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700/80 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors"
+          title="Open Command Palette (⌘K or Ctrl+K)"
+        >
+          <Search className="w-3.5 h-3.5 text-slate-400" />
+          <span className="hidden xl:inline text-xs">Commands</span>
+          <kbd className="font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-2xs">
+            ⌘K
+          </kbd>
+        </button>
 
         <button
           onClick={onOpenVoice}
@@ -109,7 +138,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           title="Open hands-free voice companion"
         >
           <Mic className="w-3.5 h-3.5" />
-          <span>Voice Companion</span>
+          <span>Voice</span>
         </button>
 
         <button

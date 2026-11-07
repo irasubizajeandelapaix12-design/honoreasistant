@@ -32,12 +32,15 @@ import { SettingsModal } from './components/SettingsModal.js';
 import { Game3D } from './components/game/Game3D.js';
 import { BioscienceLab } from './components/BioscienceLab.js';
 import { MediaStudio } from './components/MediaStudio.js';
+import { MapsStudio } from './components/MapsStudio.js';
+import { CommandPalette } from './components/CommandPalette.js';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>('chat');
   const [isDark, setIsDark] = useState<boolean>(true);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Chat & Conversation state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -50,6 +53,54 @@ export default function App() {
   const [codeStudioSnippet, setCodeStudioSnippet] = useState<{ code?: string; language?: string }>({});
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  // Global Keyboard Shortcuts
+  // 1. Command/Ctrl + 1-9: Navigate between workspace tabs
+  // 2. Command/Ctrl + K: Open Command Palette & Search
+  useEffect(() => {
+    const tabOrder: WorkspaceTab[] = [
+      'chat',      // 1
+      'maps',      // 2
+      'game',      // 3
+      'media',     // 4
+      'science',   // 5
+      'code',      // 6
+      'research',  // 7
+      'documents', // 8
+      'database',  // 9
+    ];
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Support Command on macOS and Control on Windows/Linux
+      const isModifier = e.metaKey || e.ctrlKey;
+
+      // Command/Ctrl + K: Toggle Command Palette
+      if (isModifier && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+        return;
+      }
+
+      // Command/Ctrl + 1-9: Switch Workspace Tabs
+      if (isModifier && e.key >= '1' && e.key <= '9') {
+        const index = parseInt(e.key, 10) - 1;
+        if (index >= 0 && index < tabOrder.length) {
+          e.preventDefault();
+          setCurrentTab(tabOrder[index]);
+          setIsCommandPaletteOpen(false);
+        }
+        return;
+      }
+
+      // Escape key to dismiss Command Palette
+      if (e.key === 'Escape' && isCommandPaletteOpen) {
+        setIsCommandPaletteOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandPaletteOpen]);
 
   // Initialize Dark Theme
   useEffect(() => {
@@ -362,6 +413,7 @@ export default function App() {
         onSelectTab={setCurrentTab}
         onOpenVoice={() => setIsVoiceOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
         selectedModel={activeModel}
@@ -394,6 +446,15 @@ export default function App() {
             onRunCodeInStudio={handleRunCodeInStudio}
             activeModel={activeModel}
             onSelectModel={setActiveModel}
+          />
+        )}
+
+        {currentTab === 'maps' && (
+          <MapsStudio
+            onAskAi={prompt => {
+              setCurrentTab('chat');
+              handleSendMessage(prompt, [], false);
+            }}
           />
         )}
 
@@ -462,6 +523,27 @@ export default function App() {
           setActiveModel(newSettings.defaultModel);
           if (newSettings.theme === 'dark') setIsDark(true);
           if (newSettings.theme === 'light') setIsDark(false);
+        }}
+      />
+
+      {/* Global Command & Search Palette (Command/Ctrl + K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectTab={tab => {
+          setCurrentTab(tab);
+          setIsCommandPaletteOpen(false);
+        }}
+        onNewChat={handleCreateNewConversation}
+        onOpenVoice={() => setIsVoiceOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onToggleTheme={() => setIsDark(prev => !prev)}
+        isDark={isDark}
+        conversations={conversations}
+        onSelectConversation={selectConversation}
+        onAskAi={prompt => {
+          setCurrentTab('chat');
+          handleSendMessage(prompt, [], false);
         }}
       />
     </div>
