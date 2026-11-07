@@ -21,8 +21,6 @@ import {
   FileText,
   X,
   Globe,
-  Cpu,
-  WifiOff,
   MapPin,
   Sparkles,
 } from 'lucide-react';
@@ -41,10 +39,6 @@ interface ChatViewProps {
   onSendMessage: (text: string, attachments: MessageAttachment[], enableSearch: boolean, enableMaps?: boolean) => void;
   onStopGenerating?: () => void;
   onRunCodeInStudio: (code: string, language: string) => void;
-  isOffline?: boolean;
-  brainMode?: 'cloud' | 'local' | 'auto';
-  activeOllamaModel?: string;
-  onOpenOllamaStudio?: () => void;
   activeModel?: string;
   onSelectModel?: (model: string) => void;
 }
@@ -61,10 +55,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onSendMessage,
   onStopGenerating,
   onRunCodeInStudio,
-  isOffline = false,
-  brainMode = 'auto',
-  activeOllamaModel = 'llama3.2',
-  onOpenOllamaStudio,
   activeModel = 'gemini-3.8-flash',
   onSelectModel,
 }) => {
@@ -328,11 +318,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <select
                 value={activeModel}
                 onChange={e => onSelectModel?.(e.target.value)}
-                disabled={isOffline || brainMode === 'local'}
                 className="px-2 py-1 text-xs font-mono rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none"
               >
-                <option value="gemini-3.8-flash">gemini-3.8-flash (General Intelligence)</option>
-                <option value="gemini-4-argon">gemini-4-argon (Complex STEM & Reasoning)</option>
+                <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended)</option>
                 <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Ultra-Fast)</option>
               </select>
               <span aria-hidden="true" className="text-slate-400">·</span>
@@ -346,8 +334,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 type="checkbox"
                 checked={enableSearch}
                 onChange={e => setEnableSearch(e.target.checked)}
-                disabled={isOffline || brainMode === 'local'}
-                className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-0 disabled:opacity-40"
+                className="rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-0"
               />
               <Globe className="w-3.5 h-3.5 text-indigo-500" />
               <span>Google Search</span>
@@ -358,51 +345,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 type="checkbox"
                 checked={enableMaps}
                 onChange={e => setEnableMaps(e.target.checked)}
-                disabled={isOffline || brainMode === 'local'}
-                className="rounded border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-0 disabled:opacity-40"
+                className="rounded border-slate-300 dark:border-slate-700 text-emerald-600 focus:ring-0"
               />
               <MapPin className="w-3.5 h-3.5 text-emerald-500" />
               <span>Google Maps</span>
             </label>
           </div>
         </div>
-
-        {/* Offline or Local Brain Alert Banner */}
-        {isOffline ? (
-          <div className="px-6 py-2.5 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/60 flex items-center justify-between text-xs text-amber-900 dark:text-amber-200">
-            <div className="flex items-center gap-2">
-              <WifiOff className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>
-                <strong>Offline Mode Active:</strong> Honore Assistant is running on Local Brain (Ollama: <code className="font-mono font-semibold">{activeOllamaModel}</code>). Zero internet required.
-              </span>
-            </div>
-            {onOpenOllamaStudio && (
-              <button
-                onClick={onOpenOllamaStudio}
-                className="underline font-semibold hover:text-amber-700 dark:hover:text-amber-100 text-[11px] whitespace-nowrap"
-              >
-                Ollama Settings
-              </button>
-            )}
-          </div>
-        ) : brainMode === 'local' ? (
-          <div className="px-6 py-2 bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-200">
-            <div className="flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>
-                <strong>Local Brain Active:</strong> Responses generated locally by Ollama (<code className="font-mono font-semibold">{activeOllamaModel}</code>) with private offline inference.
-              </span>
-            </div>
-            {onOpenOllamaStudio && (
-              <button
-                onClick={onOpenOllamaStudio}
-                className="underline font-semibold hover:text-emerald-700 dark:hover:text-emerald-100 text-[11px] whitespace-nowrap"
-              >
-                Switch Model
-              </button>
-            )}
-          </div>
-        ) : null}
 
         {/* Message Stream */}
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
@@ -708,35 +657,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           )}
 
-          {/* Brain mode indicator pill */}
-          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1 mb-2">
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-slate-700 dark:text-slate-300">Brain Engine:</span>
-              {isOffline || brainMode === 'local' ? (
-                <span className="flex items-center gap-1 font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                  <Cpu className="w-3 h-3" />
-                  <span>Local Ollama ({activeOllamaModel})</span>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-sans font-normal ml-1">• Offline Ready</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 font-mono text-indigo-600 dark:text-indigo-400 font-medium bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
-                  <Globe className="w-3 h-3" />
-                  <span>Gemini Cloud (Auto Offline Fallback)</span>
-                </span>
-              )}
-            </div>
 
-            {onOpenOllamaStudio && (
-              <button
-                onClick={onOpenOllamaStudio}
-                className="flex items-center gap-1 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors"
-                title="Manage offline Ollama models and connection"
-              >
-                <Cpu className="w-3 h-3" />
-                <span>Ollama Studio</span>
-              </button>
-            )}
-          </div>
 
           <div className="flex items-end gap-2 p-2 border border-slate-300 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50 focus-within:ring-1 focus-within:ring-slate-400 dark:focus-within:ring-slate-600 focus-within:border-transparent transition-all">
             <input

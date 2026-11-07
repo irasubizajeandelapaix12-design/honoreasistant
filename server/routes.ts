@@ -2,54 +2,27 @@ import { Router, Request, Response } from 'express';
 import { getDb, saveDb, Message, Conversation, DocumentItem, TaskItem, MemoryItem } from './db.js';
 import { streamChatCompletion } from './ai.js';
 import { executeCodeSandbox, executeSqlQuery, createDocument, saveMemoryItem, manageTaskItem } from './tools.js';
-import {
-  checkOllamaHealth,
-  getOllamaModels,
-  pullOllamaModelStream,
-  streamOllamaChat,
-  getOllamaBaseUrl,
-  getSystemResourceTelemetry,
-} from './ollama.js';
-
 export const apiRouter = Router();
 
 apiRouter.get('/test-models', async (_req, res) => {
-  const { GoogleGenAI } = await import('@google/genai');
-  const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+  res.json({
+    status: 'ok',
+    hasKey: Boolean(process.env.GEMINI_API_KEY),
+    engine: 'Honore Cognitive Engine & Gemini SDK',
   });
-
-  const models = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'];
-  const results: Record<string, any> = {};
-
-  for (const m of models) {
-    try {
-      const response = await ai.models.generateContent({
-        model: m,
-        contents: 'Say hello in one word',
-      });
-      results[m] = { success: true, text: response.text };
-    } catch (err: any) {
-      results[m] = { success: false, error: err.message, status: err.status, code: err.code };
-    }
-  }
-
-  res.json({ results, hasKey: Boolean(process.env.GEMINI_API_KEY), keyLength: process.env.GEMINI_API_KEY?.length });
 });
 
 // ==========================================
 // 1. CHAT STREAMING (SSE) - WITH LOCAL OLLAMA BRAIN & OFFLINE SUPPORT
 // ==========================================
 apiRouter.post('/chat/stream', async (req: Request, res: Response) => {
-  const { conversationId, message, attachments, model, enableSearch, enableMaps, brainMode, isOffline, ollamaModel } = req.body;
+  const { conversationId, message, attachments, model, enableSearch, enableMaps } = req.body;
 
   if (!message && (!attachments || attachments.length === 0)) {
     return res.status(400).json({ error: 'Message or attachment required' });
   }
 
   const db = getDb();
-  const effectiveBrainMode = brainMode || db.settings.brainMode || 'auto';
   let convId = conversationId;
 
   // Create conversation if none provided
@@ -112,12 +85,6 @@ apiRouter.post('/chat/stream', async (req: Request, res: Response) => {
   // Send initial conversation metadata event
   res.write(`data: ${JSON.stringify({ type: 'start', conversationId: convId, userMessageId: userMsgId, assistantMessageId: assistantMsgId })}\n\n`);
 
-  const effectiveOllamaModel = ollamaModel || db.settings.ollamaModel || 'llama3.2';
-  const requestedOllamaDirectly =
-    effectiveBrainMode === 'local' ||
-    Boolean(isOffline) ||
-    (typeof model === 'string' && (model.startsWith('ollama:') || model.toLowerCase().includes('llama') || model.toLowerCase().includes('mistral') || model.toLowerCase().includes('deepseek') || model.toLowerCase().includes('qwen') || model.toLowerCase().includes('phi')));
-
   // Helper to complete and save assistant message
   const completeAssistantMessage = (fullText: string, extraMeta?: any) => {
     const assistantMsg: Message = {
@@ -136,44 +103,6 @@ apiRouter.post('/chat/stream', async (req: Request, res: Response) => {
     res.end();
   };
 
-  // If local brain explicitly requested or device is offline:
-  if (requestedOllamaDirectly) {
-    res.write(`data: ${JSON.stringify({ type: 'brain_notice', message: `Engaging Local Brain (Ollama: ${effectiveOllamaModel}) • 100% Offline & Private`, mode: 'local' })}\n\n`);
-
-    try {
-      await streamOllamaChat(
-        history,
-        effectiveOllamaModel,
-        {
-          onChunk: (chunk: string) => {
-            accumulatedText += chunk;
-            res.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
-          },
-          onError: (err: any) => {
-            const cleanMsg = err.message || 'Ollama connection failed.';
-            res.write(`data: ${JSON.stringify({
-              type: 'error',
-              error: `Local Brain (Ollama) error: ${cleanMsg}\n\nTo run offline models, start Ollama locally using:\n\`ollama serve\`\nAnd verify the model is pulled using:\n\`ollama run ${effectiveOllamaModel}\``,
-            })}\n\n`);
-            res.end();
-          },
-          onComplete: (fullText: string, metadata: any) => {
-            completeAssistantMessage(fullText, { brain: 'ollama', model: effectiveOllamaModel, ...metadata });
-          },
-        }
-      );
-      return;
-    } catch (err: any) {
-      res.write(`data: ${JSON.stringify({
-        type: 'error',
-        error: `Could not connect to Ollama: ${err.message}. Ensure Ollama is running on http://127.0.0.1:11434 with 'ollama serve'.`,
-      })}\n\n`);
-      res.end();
-      return;
-    }
-  }
-
-  // Cloud Brain with automatic Ollama fallback if offline or high demand
   try {
     await streamChatCompletion(
       history,
@@ -193,43 +122,7 @@ apiRouter.post('/chat/stream', async (req: Request, res: Response) => {
           res.write(`data: ${JSON.stringify({ type: 'tool_call', toolLog })}\n\n`);
         },
         onError: async (cloudErr) => {
-          // Check if autoOfflineFallback is enabled and Ollama is available
-          if (db.settings.autoOfflineFallback !== false) {
-            console.log('[Auto-Fallback] Cloud brain failed or busy. Checking local Ollama health...');
-            const ollamaHealth = await checkOllamaHealth();
-            if (ollamaHealth.online) {
-              res.write(`data: ${JSON.stringify({
-                type: 'brain_notice',
-                message: `Cloud AI unavailable or rate-limited. Automatically switched to Local Brain (Ollama: ${effectiveOllamaModel})!`,
-                mode: 'fallback_ollama',
-              })}\n\n`);
-
-              try {
-                await streamOllamaChat(
-                  history,
-                  effectiveOllamaModel,
-                  {
-                    onChunk: (chunk: string) => {
-                      accumulatedText += chunk;
-                      res.write(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`);
-                    },
-                    onError: (err: any) => {
-                      res.write(`data: ${JSON.stringify({ type: 'error', error: err.message || 'Ollama stream error' })}\n\n`);
-                      res.end();
-                    },
-                    onComplete: (fullText: string, metadata: any) => {
-                      completeAssistantMessage(fullText, { brain: 'ollama_fallback', model: effectiveOllamaModel, ...metadata });
-                    },
-                  }
-                );
-                return;
-              } catch (ollamaErr: any) {
-                console.error('[Auto-Fallback] Local Ollama fallback also failed:', ollamaErr);
-              }
-            }
-          }
-
-          const cleanMsg = cloudErr.message || 'Service is temporarily busy. Please try again.';
+          const cleanMsg = cloudErr.message || 'The AI service is momentarily busy. Please try again in a moment.';
           res.write(`data: ${JSON.stringify({ type: 'error', error: cleanMsg })}\n\n`);
           res.end();
         },
@@ -546,70 +439,7 @@ apiRouter.get('/stats', (_req: Request, res: Response) => {
   });
 });
 
-// ==========================================
-// 10. OLLAMA LOCAL BRAIN & OFFLINE ENGINE
-// ==========================================
-apiRouter.get('/ollama/status', async (req: Request, res: Response) => {
-  const url = (req.query.url as string) || undefined;
-  const status = await checkOllamaHealth(url);
-  res.json(status);
-});
 
-apiRouter.get('/ollama/models', async (req: Request, res: Response) => {
-  const url = (req.query.url as string) || undefined;
-  const models = await getOllamaModels(url);
-  res.json({ models });
-});
-
-apiRouter.get('/ollama/system-resources', async (req: Request, res: Response) => {
-  try {
-    const url = (req.query.url as string) || undefined;
-    const telemetry = await getSystemResourceTelemetry(url);
-    res.json(telemetry);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message || 'Failed to get system resources' });
-  }
-});
-
-apiRouter.post('/ollama/pull-stream', async (req: Request, res: Response) => {
-  const { model, url } = req.body;
-  if (!model) {
-    return res.status(400).json({ error: 'Model name required' });
-  }
-
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    Connection: 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  });
-
-  try {
-    await pullOllamaModelStream(
-      model,
-      (progress) => {
-        res.write(`data: ${JSON.stringify(progress)}\n\n`);
-      },
-      url
-    );
-    res.write(`data: ${JSON.stringify({ status: 'success', completed: true })}\n\n`);
-    res.end();
-  } catch (err: any) {
-    res.write(`data: ${JSON.stringify({ status: 'error', error: err.message })}\n\n`);
-    res.end();
-  }
-});
-
-apiRouter.post('/ollama/config', (req: Request, res: Response) => {
-  const { baseUrl, model, brainMode, autoOfflineFallback } = req.body;
-  const db = getDb();
-  if (baseUrl !== undefined) db.settings.ollamaBaseUrl = baseUrl;
-  if (model !== undefined) db.settings.ollamaModel = model;
-  if (brainMode !== undefined) db.settings.brainMode = brainMode;
-  if (autoOfflineFallback !== undefined) db.settings.autoOfflineFallback = Boolean(autoOfflineFallback);
-  saveDb(db);
-  res.json({ settings: db.settings });
-});
 
 // ==========================================
 // 8. MEDIA STUDIO (MUSIC, IMAGE, VIDEO, TRANSCRIBE)

@@ -10,35 +10,6 @@ export interface UserSettings {
   enableGrounding: boolean;
   codeExecutionApproval: boolean;
   customSystemPrompt: string;
-  brainMode?: 'cloud' | 'local' | 'auto';
-  ollamaBaseUrl?: string;
-  ollamaModel?: string;
-  autoOfflineFallback?: boolean;
-}
-
-export interface OllamaModel {
-  name: string;
-  model: string;
-  size: number;
-  digest: string;
-  details?: {
-    parent_model?: string;
-    format?: string;
-    family?: string;
-    families?: string[];
-    parameter_size?: string;
-    quantization_level?: string;
-  };
-  modified_at: string;
-}
-
-export interface OllamaStatus {
-  online: boolean;
-  version?: string;
-  baseUrl: string;
-  latencyMs?: number;
-  modelCount?: number;
-  error?: string;
 }
 
 export interface MemoryItem {
@@ -153,6 +124,9 @@ export interface SystemStats {
 
 export type WorkspaceTab =
   | 'chat'
+  | 'game'
+  | 'media'
+  | 'science'
   | 'code'
   | 'research'
   | 'documents'
@@ -161,50 +135,4 @@ export type WorkspaceTab =
   | 'automations'
   | 'memory'
   | 'dashboard'
-  | 'ollama'
-  | 'resources'
-  | 'game'
-  | 'science'
-  | 'media'
   | 'settings';
-
-export interface SystemResourceTelemetry {
-  timestamp: string;
-  cpu: {
-    usagePercent: number;
-    cores: number;
-    model: string;
-    speedMhz: number;
-    loadAverage: number[];
-    coreLoads: number[];
-  };
-  memory: {
-    totalBytes: number;
-    usedBytes: number;
-    freeBytes: number;
-    usagePercent: number;
-    processRssBytes: number;
-  };
-  gpu: {
-    detected: boolean;
-    type: string;
-    vramUsedBytes: number;
-    vramTotalBytes: number;
-    vramPercent: number;
-    gpuLoadPercent: number;
-  };
-  ollama: {
-    online: boolean;
-    baseUrl: string;
-    version?: string;
-    loadedModels: Array<{
-      name: string;
-      model: string;
-      sizeBytes: number;
-      sizeVramBytes: number;
-      quantization: string;
-      family: string;
-      expiresAt?: string;
-    }>;
-  };
-}

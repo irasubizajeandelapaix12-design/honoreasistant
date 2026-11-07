@@ -7,7 +7,6 @@ import {
   DocumentItem,
   TaskItem,
   UserSettings,
-  OllamaStatus,
 } from './types/index.js';
 import {
   fetchConversations,
@@ -16,8 +15,6 @@ import {
   updateConversation,
   deleteConversation,
   fetchSettings,
-  fetchOllamaStatus,
-  updateOllamaConfig,
 } from './services/api.js';
 
 import { TopBar } from './components/TopBar.js';
@@ -32,11 +29,9 @@ import { AutomationStudio } from './components/AutomationStudio.js';
 import { MemoryVault } from './components/MemoryVault.js';
 import { VoiceModal } from './components/VoiceModal.js';
 import { SettingsModal } from './components/SettingsModal.js';
-import { OllamaStudio } from './components/OllamaStudio.js';
 import { Game3D } from './components/game/Game3D.js';
 import { BioscienceLab } from './components/BioscienceLab.js';
 import { MediaStudio } from './components/MediaStudio.js';
-import { SystemResources } from './components/SystemResources.js';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>('chat');
@@ -51,36 +46,10 @@ export default function App() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeModel, setActiveModel] = useState('gemini-3.8-flash');
 
-  // Brain & Offline state
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [brainMode, setBrainMode] = useState<'cloud' | 'local' | 'auto'>('auto');
-  const [ollamaModel, setOllamaModel] = useState('llama3.2');
-  const [ollamaStatus, setOllamaStatus] = useState<OllamaStatus | null>(null);
-  const [rawSettings, setRawSettings] = useState<UserSettings | null>(null);
-
   // Code Studio initial state for cross-module jumping
   const [codeStudioSnippet, setCodeStudioSnippet] = useState<{ code?: string; language?: string }>({});
 
   const abortControllerRef = React.useRef<AbortController | null>(null);
-
-  // Online / Offline synchronization
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Initial Ollama connection probe
-    fetchOllamaStatus()
-      .then(setOllamaStatus)
-      .catch(() => setOllamaStatus({ online: false, baseUrl: 'http://127.0.0.1:11434' }));
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
 
   // Initialize Dark Theme
   useEffect(() => {
@@ -96,11 +65,8 @@ export default function App() {
   useEffect(() => {
     fetchSettings()
       .then(settings => {
-        setRawSettings(settings);
         if (settings.theme === 'light') setIsDark(false);
         setActiveModel(settings.defaultModel || 'gemini-3.8-flash');
-        if (settings.brainMode) setBrainMode(settings.brainMode);
-        if (settings.ollamaModel) setOllamaModel(settings.ollamaModel);
       })
       .catch(console.error);
 
@@ -210,12 +176,9 @@ export default function App() {
           conversationId: activeConversation?.id,
           message: text,
           attachments,
-          model: brainMode === 'local' ? `ollama:${ollamaModel}` : activeModel,
-          enableSearch: isOffline ? false : enableSearch,
-          enableMaps: isOffline ? false : enableMaps,
-          brainMode,
-          isOffline,
-          ollamaModel,
+          model: activeModel,
+          enableSearch,
+          enableMaps,
         }),
         signal: abortController.signal,
       });
@@ -360,11 +323,8 @@ export default function App() {
       body: JSON.stringify({
         conversationId: activeConversation?.id,
         message: userTranscript,
-        model: brainMode === 'local' ? `ollama:${ollamaModel}` : activeModel,
-        enableSearch: isOffline ? false : true,
-        brainMode,
-        isOffline,
-        ollamaModel,
+        model: activeModel,
+        enableSearch: true,
       }),
     });
 
@@ -404,12 +364,7 @@ export default function App() {
         onOpenSettings={() => setIsSettingsOpen(true)}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
-        selectedModel={brainMode === 'local' ? `ollama:${ollamaModel}` : activeModel}
-        isOffline={isOffline}
-        brainMode={brainMode}
-        ollamaStatus={ollamaStatus}
-        activeOllamaModel={ollamaModel}
-        onToggleBrainMode={mode => setBrainMode(mode)}
+        selectedModel={activeModel}
       />
 
       {/* Main Workspace Viewports */}
@@ -437,54 +392,9 @@ export default function App() {
             onSendMessage={handleSendMessage}
             onStopGenerating={handleStopGenerating}
             onRunCodeInStudio={handleRunCodeInStudio}
-            isOffline={isOffline}
-            brainMode={brainMode}
-            activeOllamaModel={ollamaModel}
-            onOpenOllamaStudio={() => setCurrentTab('ollama')}
             activeModel={activeModel}
             onSelectModel={setActiveModel}
           />
-        )}
-
-        {currentTab === 'ollama' && (
-          <OllamaStudio
-            settings={rawSettings || {
-              defaultModel: activeModel,
-              temperature: 0.7,
-              responseStyle: 'balanced',
-              defaultLanguage: 'English',
-              voiceGender: 'female',
-              voiceSpeed: 1,
-              theme: isDark ? 'dark' : 'light',
-              enableMemory: true,
-              enableGrounding: true,
-              codeExecutionApproval: false,
-              customSystemPrompt: '',
-              brainMode,
-              ollamaModel,
-              autoOfflineFallback: true,
-            }}
-            onUpdateSettings={s => {
-              setRawSettings(s);
-              if (s.brainMode) setBrainMode(s.brainMode);
-              if (s.ollamaModel) setOllamaModel(s.ollamaModel);
-            }}
-            onSelectLocalModel={m => setOllamaModel(m)}
-            onStartChatWithModel={m => {
-              setOllamaModel(m.replace(/^ollama:/i, ''));
-              setBrainMode('local');
-              setCurrentTab('chat');
-            }}
-          />
-        )}
-
-        {currentTab === 'resources' && (
-          <div className="flex-1 overflow-y-auto p-6 lg:p-8 max-w-6xl mx-auto w-full">
-            <SystemResources
-              ollamaBaseUrl={rawSettings?.ollamaBaseUrl}
-              isOllamaMode={brainMode === 'local'}
-            />
-          </div>
         )}
 
         {currentTab === 'code' && (

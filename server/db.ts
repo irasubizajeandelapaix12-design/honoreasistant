@@ -13,10 +13,6 @@ export interface UserSettings {
   enableGrounding: boolean;
   codeExecutionApproval: boolean;
   customSystemPrompt: string;
-  brainMode?: 'cloud' | 'local' | 'auto';
-  ollamaBaseUrl?: string;
-  ollamaModel?: string;
-  autoOfflineFallback?: boolean;
 }
 
 export interface MemoryItem {
@@ -132,10 +128,6 @@ const DEFAULT_SETTINGS: UserSettings = {
   enableGrounding: true,
   codeExecutionApproval: false,
   customSystemPrompt: 'You are Honore Assistant, an advanced, highly capable personal AI assistant, programming partner, research analyst, and productivity agent.',
-  brainMode: 'auto',
-  ollamaBaseUrl: 'http://127.0.0.1:11434',
-  ollamaModel: 'llama3.2',
-  autoOfflineFallback: true,
 };
 
 const INITIAL_MEMORIES: MemoryItem[] = [
@@ -251,7 +243,7 @@ const INITIAL_DOCUMENTS: DocumentItem[] = [
 Aether is an advanced personal AI assistant engineered for high autonomy and versatility.
 
 ## Core Subsystems
-1. Multi-Provider Cognitive Engine (Google Gemini 3.8 Flash, local Ollama, Claude, OpenAI)
+1. Multi-Provider Cognitive Engine (Google Gemini 3.8 Flash, Flash Lite)
 2. Grounded Web Intelligence with Google Search
 3. Client/Server Code Execution Sandbox
 4. Persistent Memory Vault with Semantic Context Injection

@@ -8,9 +8,6 @@ import {
   UserSettings,
   SystemStats,
   SqlResult,
-  OllamaModel,
-  OllamaStatus,
-  SystemResourceTelemetry,
 } from '../types/index.js';
 
 export async function fetchConversations(query: string = ''): Promise<Conversation[]> {
@@ -210,84 +207,7 @@ export async function fetchStats(): Promise<SystemStats> {
   return res.json();
 }
 
-export async function fetchOllamaStatus(url?: string): Promise<OllamaStatus> {
-  const endpoint = url ? `/api/ollama/status?url=${encodeURIComponent(url)}` : '/api/ollama/status';
-  const res = await fetch(endpoint);
-  if (!res.ok) throw new Error('Failed to check Ollama status');
-  return res.json();
-}
 
-export async function fetchOllamaModels(url?: string): Promise<OllamaModel[]> {
-  const endpoint = url ? `/api/ollama/models?url=${encodeURIComponent(url)}` : '/api/ollama/models';
-  const res = await fetch(endpoint);
-  if (!res.ok) throw new Error('Failed to fetch Ollama models');
-  const data = await res.json();
-  return data.models || [];
-}
-
-export async function pullOllamaModel(
-  model: string,
-  onProgress: (data: { status: string; completed?: number; total?: number; digest?: string }) => void,
-  url?: string
-): Promise<void> {
-  const res = await fetch('/api/ollama/pull-stream', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, url }),
-  });
-
-  if (!res.ok) throw new Error(`Pull failed: ${res.statusText}`);
-
-  const reader = res.body?.getReader();
-  if (!reader) return;
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const jsonStr = line.replace('data: ', '').trim();
-      if (!jsonStr) continue;
-      try {
-        const parsed = JSON.parse(jsonStr);
-        onProgress(parsed);
-      } catch {
-        // ignore parse error
-      }
-    }
-  }
-}
-
-export async function updateOllamaConfig(config: {
-  baseUrl?: string;
-  model?: string;
-  brainMode?: 'cloud' | 'local' | 'auto';
-  autoOfflineFallback?: boolean;
-}): Promise<UserSettings> {
-  const res = await fetch('/api/ollama/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(config),
-  });
-  if (!res.ok) throw new Error('Failed to update Ollama config');
-  const data = await res.json();
-  return data.settings;
-}
-
-export async function fetchSystemResources(baseUrl?: string): Promise<SystemResourceTelemetry> {
-  const url = baseUrl ? `/api/ollama/system-resources?url=${encodeURIComponent(baseUrl)}` : '/api/ollama/system-resources';
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('Failed to fetch system resources');
-  return res.json();
-}
 
 // Media Studio API
 export async function generateMusic(params: {
